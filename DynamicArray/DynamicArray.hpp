@@ -9,18 +9,19 @@ template <typename T>
 class DynamicArray
 {
 private:
-	T* data;	        // 동적 메모리 할당을 위한 포인터
+	T* data=nullptr;	        // 동적 메모리 할당을 위한 포인터
 	size_t _size = 0;		// 사용된 메모리의 크기
-	size_t _capacity = 10;   // 할당된 메모리의 크기
+	size_t _capacity = 0;   // 할당된 메모리의 크기
 
 public:
 	DynamicArray()
 	{
-		data = new T[_capacity];
+		
 	}
 	~DynamicArray()
 	{
-		delete[] data;
+		clear();
+		::operator delete(data); // 메모리 해제 
 		data = nullptr;
 		_size = 0;
 		_capacity = 0;
@@ -33,48 +34,54 @@ public:
 
 	void push_back(const T& value)
 	{
+		std::cout << "push_back" << std::endl;
 		if (_size >= _capacity)
 		{
-			reserve(_capacity * 2);
+			reserve((_capacity == 0) ? 1 : _capacity * 2);
 		}
 		data[_size++] = value; // 복사 대입 연산자
 	}
 	void pop_back()
-	{
+	{		
+		std::cout << "pop_back" << std::endl;
 		if (_size > 0)
 		{
+			data[--_size].~T(); // 소멸자 호출
 			--_size;
 		}
 	}
 	void insert(size_t index, const T& value)
 	{
+		std::cout << "insert" << index << std::endl;
 		if (index > _size)
 		{
 			throw std::out_of_range("Index out of range");
 		}
 		if (_size >= _capacity)
 		{
-			reserve(_capacity * 2);
+			reserve((_capacity == 0) ? 1 : _capacity * 2);
 		}
 		// 한칸씩 뒤로 밀기
 		for (size_t i = _size; i > index; --i)
 		{
-			data[i] = std::move(data[i - 1]); // 이동 생성자 호출 시도
+			data[i] = data[i - 1]; // 복사 대입 연산자 호출
 		}
-		data[index] = value; // 복사 대입 연산자
+		data[index] = value; // 복사 대입 연산자 호출
 		++_size;
 	}
 
 	// 옮기기 
 	void erase(size_t index)
 	{
+		std::cout << "erase" << index << std::endl;
 		if (index >= _size)
 		{
 			throw std::out_of_range("Index out of range");
 		}
+		data[index].~T(); // 소멸자 호출
 		for (size_t i = index; i < _size - 1; ++i)
 		{
-			data[i] = std::move(data[i + 1]); // 이동 생성자 호출 시도
+			data[i] = data[i + 1]; // 복사 대입 연산자 호출
 		}
 		--_size;
 	}
@@ -115,12 +122,21 @@ public:
 	{
 		if (newCap > _capacity)
 		{
-			T* newData = new T[newCap];
+			// 1. 새 메모리 할당 (T 객체 n개 분량만큼)
+			T* newData = static_cast<T*>(::operator new(sizeof(T) * newCap));
+
+			// 2. 기존 요소 복사 - placement new 사용
 			for (size_t i = 0; i < _size; ++i)
 			{
-				newData[i] = std::move(data[i]);
+				::new (&newData[i]) T(data[i]); // 복사생성자 호출
+				data[i].~T(); // 기존 요소 소멸자 호출
 			}
-			delete[] data;
+						
+			// 3. 기존 메모리 해제
+			if (data != nullptr)
+				::operator delete(data);
+
+			// 4. 포인터 및 용량 갱신
 			data = newData;
 			_capacity = newCap;
 		}
@@ -128,13 +144,19 @@ public:
 	void resize(size_t newSize)
 	{
 		if (newSize > _capacity)
-		{
-			reserve(newSize);
+			reserve(newSize); // 메모리 늘림
+
+		if (newSize > _size) {
+			// 새로운 요소 생성
+			for (size_t i = _size; i < newSize; ++i)
+				::new (&data[i]) T(); // 기본 생성자 호출
 		}
-		for (size_t i = _size; i < newSize; ++i)
-		{
-			data[i] = T(); // 기본 생성자 호출
+		else if (newSize < _size) {
+			// 남은 요소 파괴
+			for (size_t i = newSize; i < _size; ++i)
+				data[i].~T();
 		}
+
 		_size = newSize;
 	}
 	void clear()
@@ -147,7 +169,7 @@ public:
 	}
 	//void shrink_to_fit();
 	T& front()
-	{
+	{		
 		if (_size == 0)
 		{
 			throw std::out_of_range("Array is empty");
@@ -155,84 +177,13 @@ public:
 		return data[0];
 	}
 	T& back()
-	{
+	{		
 		if (_size == 0)
 		{
 			throw std::out_of_range("Array is empty");
 		}
 		return data[_size - 1];
 	}
-	
-	void swap(DynamicArray& other)
-	{
-		std::swap(data, other.data);
-		std::swap(_size, other._size);
-		std::swap(_capacity, other._capacity);
-	}
 };
 
 
-
-
-class Test
-{
-public:
-	Test() 
-	{ 
-		std::cout << "Test default constructor\n"; 
-	}
-	Test(const Test& other) 
-	{ 
-		m_Value = other.m_Value;
-		std::cout << "Test copy constructor\n"; 		
-	}
-	Test(Test&& other) noexcept 
-	{ 
-		m_Value = other.m_Value;
-		std::cout << "Test move constructor\n"; 
-	}
-	~Test() { std::cout << "Test destructor\n"; }
-
-public:
-	void operator=(const Test& rhs) 
-	{ 
-		m_Value = rhs.m_Value;
-		std::cout << "Test copy assignment\n"; 
-	}
-	void operator=(Test&& rhs) noexcept 
-	{ 
-		m_Value = rhs.m_Value;
-		std::cout << "Test move assignment\n"; 
-	}
-
-	friend std::ostream& operator<<(std::ostream& os, const Test& t)
-	{
-		os << t.m_Value;
-		return os;
-	}
-
-
-	int m_Value = 0;
-};
-
-int main()
-{
-	DynamicArray<Test> arr;
-
-	Test t;
-	for (int i = 0; i < 10; ++i)
-	{
-		
-		t.m_Value = i;
-		arr.push_back(t);
-	}
-
-	t.m_Value = 100;
-	arr.insert(2, t);
-
-	for (int i = 0; i < arr.size(); ++i)
-	{
-		std::cout << arr[i] << " ";
-	}
-	std::cout << arr.size() << std::endl;
-}
