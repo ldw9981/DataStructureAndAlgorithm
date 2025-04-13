@@ -120,26 +120,26 @@ public:
 	}
 	void reserve(size_t newCap)
 	{
-		if (newCap > _capacity)
+		if (newCap <= _capacity)
+			return; // 용량이 충분함
+
+		// 1. 새 메모리 할당 (T 객체 n개 분량만큼)
+		T* newData = static_cast<T*>(::operator new(sizeof(T) * newCap));
+
+		// 2. 기존 요소 복사 - placement new 사용
+		for (size_t i = 0; i < _size; ++i)
 		{
-			// 1. 새 메모리 할당 (T 객체 n개 분량만큼)
-			T* newData = static_cast<T*>(::operator new(sizeof(T) * newCap));
-
-			// 2. 기존 요소 복사 - placement new 사용
-			for (size_t i = 0; i < _size; ++i)
-			{
-				::new (&newData[i]) T(data[i]); // 복사생성자 호출
-				data[i].~T(); // 기존 요소 소멸자 호출
-			}
-						
-			// 3. 기존 메모리 해제
-			if (data != nullptr)
-				::operator delete(data);
-
-			// 4. 포인터 및 용량 갱신
-			data = newData;
-			_capacity = newCap;
+			::new (&newData[i]) T(data[i]); // 복사생성자 호출
+			data[i].~T(); // 기존 요소 소멸자 호출
 		}
+		
+		// 3. 기존 메모리 해제
+		if (data != nullptr)
+			::operator delete(data);
+
+		// 4. 포인터 및 용량 갱신
+		data = newData;
+		_capacity = newCap;
 	}
 	void resize(size_t newSize)
 	{
@@ -152,7 +152,7 @@ public:
 				::new (&data[i]) T(); // 기본 생성자 호출
 		}
 		else if (newSize < _size) {
-			// 남은 요소 파괴
+			// 남은 요소 소멸자 호출
 			for (size_t i = newSize; i < _size; ++i)
 				data[i].~T();
 		}
