@@ -3,6 +3,48 @@
 
 #include <iostream>
 
+#include <iostream>
+
+template<typename T>
+struct Node {
+	T data;
+	Node* prev;
+	Node* next;
+};
+
+template<typename T>
+class DoublyLinkedList {
+public:
+	Node<T> head, tail; // 더미 노드
+
+	DoublyLinkedList() {
+		head.next = &tail;
+		tail.prev = &head;
+	}
+
+	void insert_back(int value) {
+		Node* node = new Node<T>{ value, tail.prev, &tail };
+		tail.prev->next = node;
+		tail.prev = node;
+	}
+
+	void erase(Node<T>* node) {
+		if (node == &head || node == &tail) 
+			return; // 더미는 삭제 금지
+		
+		node->prev->next = node->next;
+		node->next->prev = node->prev;
+		delete node;
+	}
+
+	void print() {
+		for (Node* cur = head.next; cur != &tail; cur = cur->next)
+			std::cout << cur->data << " ";
+		std::cout << "\n";
+	}
+};
+
+
 int main()
 {
     std::cout << "Hello World!\n";
