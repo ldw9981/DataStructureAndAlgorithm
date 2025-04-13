@@ -141,6 +141,7 @@ public:
 		data = newData;
 		_capacity = newCap;
 	}
+
 	void resize(size_t newSize)
 	{
 		if (newSize > _capacity)
