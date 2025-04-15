@@ -67,9 +67,5 @@ int main()
 	a.m_Value = 1;
 	arr.push_back(a);
 
-	std::cout << "Reserve20\n";
-	arr.reserve(20);
-	std::cout << "Dd\n";
-
-
+	arr.pop_back();
 }
