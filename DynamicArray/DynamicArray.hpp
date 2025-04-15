@@ -16,10 +16,11 @@ private:
 public:
 	DynamicArray()
 	{
-		
+		std::cout << "DynamicArray()" << std::endl;
 	}
 	~DynamicArray()
 	{
+		std::cout << "~DynamicArray()" << std::endl;
 		clear();
 		::operator delete(data); // 메모리 해제 
 		data = nullptr;
@@ -39,14 +40,14 @@ public:
 		{
 			reserve((_capacity == 0) ? 1 : _capacity * 2);
 		}
-		data[_size++] = value; // 복사 대입 연산자
+		new (&data[_size++]) T(value);
 	}
 	void pop_back()
 	{		
 		std::cout << "pop_back" << std::endl;
 		if (_size > 0)
 		{
-			data[--_size].~T(); // 소멸자 호출
+			data[_size-1].~T(); // 소멸자 호출
 			--_size;
 		}
 	}
@@ -66,7 +67,9 @@ public:
 		{
 			data[i] = data[i - 1]; // 복사 대입 연산자 호출
 		}
-		data[index] = value; // 복사 대입 연산자 호출
+
+		new (&data[index++]) T(value);
+
 		++_size;
 	}
 
@@ -162,6 +165,7 @@ public:
 	}
 	void clear()
 	{
+		std::cout << "clear()" << std::endl;
 		for (size_t i = 0; i < _size; ++i)
 		{
 			data[i].~T(); // 소멸자 호출
