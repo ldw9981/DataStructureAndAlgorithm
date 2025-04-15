@@ -68,7 +68,7 @@ public:
 			data[i] = data[i - 1]; // 복사 대입 연산자 호출
 		}
 
-		new (&data[index++]) T(value);  //  복사생성자를 통한 인스턴스(vfptr포함) 초기화 
+		new (&data[index]) T(value);  //  복사생성자를 통한 인스턴스(vfptr포함) 초기화 
 		++_size;
 	}
 
