@@ -1,24 +1,38 @@
 #include <iostream>
 #include "DynamicArray.hpp"
+#include <vector>
 
-class Test
+class Base
+{
+public:
+	Base()
+	{
+		std::cout << "Base()\n";
+	}
+	virtual ~Base()
+	{
+		std::cout << "~Base()\n";
+	}
+};
+
+class Test : public Base
 {
 public:
 	Test()
 	{
-		std::cout << "Test default constructor\n";
+		std::cout << "Test() default\n";
 	}
 	Test(const Test& other)
 	{
 		m_Value = other.m_Value;
-		std::cout << "Test copy constructor\n";
+		std::cout << "Test() copy\n";
 	}
 	Test(Test&& other) noexcept
 	{
 		m_Value = other.m_Value;
-		std::cout << "Test move constructor\n";
+		std::cout << "Test() move\n";
 	}
-	~Test() { std::cout << "Test destructor\n"; }
+	~Test() override { std::cout << "~Test()\n"; }
 
 public:
 	void operator=(const Test& rhs)
@@ -45,28 +59,13 @@ public:
 
 int main()
 {
-	DynamicArray<int> arr;
-	arr.reserve(5);
-	arr.reserve(10);
+	DynamicArray<Test> arr;
+	arr.reserve(1);
+	
 
-	int t;
-	for (int i = 0; i < 10; ++i)
-	{
-
-		//t.m_Value = i;
-		t = i;
-		arr.push_back(t);
-	}
-
-	t = 100;
-	arr.insert(2, t);
-
-	for (int i = 0; i < arr.size(); ++i)
-	{
-		std::cout << arr[i] << " ";
-	}
-	std::cout << arr.size() << std::endl;
+	Test a;
+	a.m_Value = 1;
+	arr.push_back(a);
 
 	arr.pop_back();
-
 }

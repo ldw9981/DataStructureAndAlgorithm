@@ -16,10 +16,11 @@ private:
 public:
 	DynamicArray()
 	{
-		
+		std::cout << "DynamicArray()" << std::endl;
 	}
 	~DynamicArray()
 	{
+		std::cout << "~DynamicArray()" << std::endl;
 		clear();
 		::operator delete(data); // 메모리 해제 
 		data = nullptr;
@@ -39,14 +40,14 @@ public:
 		{
 			reserve((_capacity == 0) ? 1 : _capacity * 2);
 		}
-		data[_size++] = value; // 복사 대입 연산자
+		new (&data[_size++]) T(value); //  복사생성자를 통한 인스턴스(vfptr포함) 초기화 
 	}
 	void pop_back()
 	{		
 		std::cout << "pop_back" << std::endl;
 		if (_size > 0)
 		{
-			data[--_size].~T(); // 소멸자 호출
+			data[_size-1].~T(); // 소멸자 호출
 			--_size;
 		}
 	}
@@ -66,7 +67,8 @@ public:
 		{
 			data[i] = data[i - 1]; // 복사 대입 연산자 호출
 		}
-		data[index] = value; // 복사 대입 연산자 호출
+
+		new (&data[index]) T(value);  //  복사생성자를 통한 인스턴스(vfptr포함) 초기화 
 		++_size;
 	}
 
@@ -129,7 +131,7 @@ public:
 		// 2. 기존 요소 복사 - placement new 사용
 		for (size_t i = 0; i < _size; ++i)
 		{
-			::new (&newData[i]) T(data[i]); // 복사생성자 호출
+			::new (&newData[i]) T(data[i]); //  복사생성자를 통한 인스턴스(vfptr포함) 초기화 
 			data[i].~T(); // 기존 요소 소멸자 호출
 		}
 		
@@ -150,7 +152,7 @@ public:
 		if (newSize > _size) {
 			// 새로운 요소 생성
 			for (size_t i = _size; i < newSize; ++i)
-				::new (&data[i]) T(); // 기본 생성자 호출
+				::new (&data[i]) T(); //  기본 생성자를 통한 인스턴스(vfptr포함) 초기화 
 		}
 		else if (newSize < _size) {
 			// 남은 요소 소멸자 호출
@@ -162,6 +164,7 @@ public:
 	}
 	void clear()
 	{
+		std::cout << "clear()" << std::endl;
 		for (size_t i = 0; i < _size; ++i)
 		{
 			data[i].~T(); // 소멸자 호출
