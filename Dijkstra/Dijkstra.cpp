@@ -29,8 +29,9 @@ struct Graph {
 	}
 
 	void SetNode(int i, char c) { Nodes[i].Data = c; }
-	void AddEdge(int from, int to , int weight) {
-		Nodes[from].Edges.push_back({ to , weight});
+	void AddDirectedEdge(int from, int to,int weight)
+	{
+		Nodes[from].Edges.push_back({ to,weight });
 	}
 
 	void PrintGraphNodeAndEdge() const {
@@ -41,32 +42,65 @@ struct Graph {
 			cout << "\n";
 		}
 	}
-
 	// Daikstra
 	void Daikstra(int start)
 	{
-		vector<int> Visited(Nodes.size(), false); // 방문 안한 노드는 false
-		priority_queue<int> Queue;	// 방문할 노드 index 를 저장하는 큐
-		Queue.push(start);		// 시작 노드 index 를 큐에 삽입
+		vector<bool> Visit(Nodes.size(), false); // 방문 안한 노드는 false		
+		vector<int> Distance(Nodes.size(),INT_MAX);
+
+		struct q_data
+		{
+			int NodeIndex;
+			int AccumulatedWeight;	//	누적 가중치				
+			bool operator>(const q_data& other) const
+			{
+				return AccumulatedWeight > other.AccumulatedWeight;
+			}
+		};
+
+		// 방문할 노드 index 를 저장하는 큐
+		// greater<T>는 “작은 값이 앞선다”-> min-heap
+		priority_queue<q_data, vector<q_data>, std::greater<q_data>> Queue;	
+		
+		Queue.push({ start,0});		// 시작 노드 index와 가중치	0을 삽입
+		Distance[start] = 0;
 
 		while (!Queue.empty())
 		{
-			int current = Queue.top(); // 큐에서 방문할 노드 index 추출
-			Queue.pop();				// 큐에서 추출한 노드 index 제거
+			auto curr = Queue.top(); // 큐에서 방문할 노드 정보 복사
+			Queue.pop();			  // 큐에서 제거
+			cout << "top " << curr.NodeIndex << "\n";		
 
-			if (Visited[current] == true) // 방문한 노드면 패스
-				continue;
+			if( Visit[curr.NodeIndex])
+				continue; // 이미 방문한 노드면 무시	
 
-			Visited[current] = true; // 방문 처리
-			cout << Nodes[current].Data << " ";
+			if( Distance[curr.NodeIndex] < curr.AccumulatedWeight)
+				continue; // 이미 더 짧은 경로를 찾았으면 무시
 
-			// 현재 노드의 인접 노드들을 큐에 삽입하여 방문 대기
-			// 큐이므로 먼저 삽입된 노드가 먼저 방문됨
-			for (auto& edge : Nodes[current].Edges)
+			Visit[curr.NodeIndex] = true; // 방문 처리
+
+			// 현재 노드의 인접 노드들을 순회
+			for (auto& edge : Nodes[curr.NodeIndex].Edges)
 			{
-				int next = edge.To;
-				Queue.push(next);
+				cout << "edge " << edge.To << "," << edge.Weight << "\n";
+				// 현재 노드를 거쳐서 다음 노드로 가는 비용이 더 적으면 거리값 갱신
+				int newCost = Distance[curr.NodeIndex] + edge.Weight;
+				if (newCost < Distance[edge.To])
+				{
+					Distance[edge.To] = newCost;	
+					cout << "push " << edge.To << "," << newCost << "\n";
+					Queue.push({ edge.To,newCost });	//복사본 보관		
+				}	
 			}
+		}
+
+		// 결과 출력
+		for (int i = 0; i < Distance.size(); ++i)
+		{
+			if (Distance[i] == INT_MAX)
+				cout << Nodes[i].Data << ": " << "INF\n";
+			else
+				cout << Nodes[i].Data << ": " << Distance[i] << "\n";
 		}
 	}
 };
@@ -82,19 +116,19 @@ int main()
 	std::cout << "Hello World!\n";
 
 	Graph graph(6);
-	
+	// 번호 맞추기 힘들들어서 0번 노드는 안씀
 	graph.SetNode(1, '1');
 	graph.SetNode(2, '2');
 	graph.SetNode(3, '3');
 	graph.SetNode(4, '4');
 	graph.SetNode(5, '5');
 
-	graph.AddEdge(1,2,8); 
-	graph.AddEdge(1,3,3); 
-	graph.AddEdge(2,4,4);
-	graph.AddEdge(2,5,15); 
-	graph.AddEdge(3,4,13); 
-	graph.AddEdge(4,5,2);
+	graph.AddDirectedEdge(1,2,8);
+	graph.AddDirectedEdge(1,3,3);
+	graph.AddDirectedEdge(2,4,4);
+	graph.AddDirectedEdge(2,5,15);
+	graph.AddDirectedEdge(3,4,13);
+	graph.AddDirectedEdge(4,5,2);
 
 
 
