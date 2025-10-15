@@ -75,7 +75,7 @@ struct Graph {
 				continue; // 이미 방문한 노드면 무시	
 
 			if( Distance[curr.NodeIndex] < curr.AccumulatedWeight)
-				continue; // 이미 더 짧은 경로를 찾았으면 무시
+				continue; // 이미 더 짧은 경로를 찾있으면 무시
 
 			Visit[curr.NodeIndex] = true; // 방문 처리
 
