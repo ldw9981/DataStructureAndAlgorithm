@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{555e8702-823c-4d25-b3df-6b5bd96a59e3}</ProjectGuid>
-    <RootNamespace>ThreadPool</RootNamespace>
+    <ProjectGuid>{15789f65-c35c-4e82-aecc-617dde5fd681}</ProjectGuid>
+    <RootNamespace>TestCode</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -123,11 +123,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="ThreadPool.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ThreadPool.h" />
+    <ClCompile Include="push_function.cpp" />
+    <ClCompile Include="TestCode.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

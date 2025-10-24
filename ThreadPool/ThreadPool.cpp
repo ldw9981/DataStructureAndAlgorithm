@@ -1,20 +1,48 @@
-﻿// ThreadPool.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
-//
+﻿#include "ThreadPool.h"
 
-#include <iostream>
-
-int main()
+ThreadPool::ThreadPool(size_t threadCount /*= std::thread::hardware_concurrency()*/)
+	: _stop(false)
 {
-    std::cout << "Hello World!\n";
+	if (threadCount == 0) threadCount = 1;
+	_workers.reserve(threadCount);
+
+	for (size_t i = 0; i < threadCount; ++i) 
+	{
+		_workers.emplace_back([this] 
+		{
+			for (;;) 
+			{
+				std::function<void()> job;
+				{   // 작업 대기/획득 구간
+					std::unique_lock<std::mutex> lock(_mtx);
+					_cv.wait(lock, [this] 
+					{
+						return _stop.load(std::memory_order_acquire) || !_jobs.empty();
+					});
+
+					if (_stop.load(std::memory_order_relaxed) && _jobs.empty())
+						return; // 종료
+
+					job = std::move(_jobs.front());
+					_jobs.pop();
+				}
+
+				// 작업 실행 (락 없이)
+				job();
+			}
+		});
+	}
 }
 
-// 프로그램 실행: <Ctrl+F5> 또는 [디버그] > [디버깅하지 않고 시작] 메뉴
-// 프로그램 디버그: <F5> 키 또는 [디버그] > [디버깅 시작] 메뉴
-
-// 시작을 위한 팁: 
-//   1. [솔루션 탐색기] 창을 사용하여 파일을 추가/관리합니다.
-//   2. [팀 탐색기] 창을 사용하여 소스 제어에 연결합니다.
-//   3. [출력] 창을 사용하여 빌드 출력 및 기타 메시지를 확인합니다.
-//   4. [오류 목록] 창을 사용하여 오류를 봅니다.
-//   5. [프로젝트] > [새 항목 추가]로 이동하여 새 코드 파일을 만들거나, [프로젝트] > [기존 항목 추가]로 이동하여 기존 코드 파일을 프로젝트에 추가합니다.
-//   6. 나중에 이 프로젝트를 다시 열려면 [파일] > [열기] > [프로젝트]로 이동하고 .sln 파일을 선택합니다.
+void ThreadPool::wait_idle()
+{
+	// 적극적 대기는 피하고, 조건변수 2개를 도입할 수도 있지만
+	// 간단히 폴링 + sleep을 사용 (필요시 개선)
+	for (;;) {
+		{
+			std::lock_guard<std::mutex> lock(_mtx);
+			if (_jobs.empty()) break;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
+}
