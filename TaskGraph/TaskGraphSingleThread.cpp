@@ -92,9 +92,9 @@ int main()
 	g.AddDependency(t1, t2); // t2 depends on t1
 	g.AddDependency(t1, t3); // t3 depends on t1
 	g.AddDependency(t1, t4); // t3 depends on t1
-	g.AddDependency(t2, t5); // t4 depends on t2
-	g.AddDependency(t3, t5); // t4 depends on t3
-	g.AddDependency(t4, t5); // t4 depends on t2
+	g.AddDependency(t2, t5); // t5 depends on t2
+	g.AddDependency(t3, t5); // t5 depends on t3
+	g.AddDependency(t4, t5); // t5 depends on t4
 
 
 	// 그래프 자체를 수정하지 않으므로 다시 실행해도 동일하게 동작함
