@@ -15,7 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TaskGraph.cpp">
+    <ClCompile Include="TaskGraphSingleThread.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="BindFunction.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RValueReference.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

@@ -22,7 +22,7 @@ void push_job(F&& f, Args&&... args)	// 임시객체 까지 고려하여  rvalue 참조로 받
 
 	// 1) f(args...)를 인자 없는 호출자로 만들기 
 	auto bound = std::bind(std::forward<F>(f), std::forward<Args>(args)...); // rvalue or lvalue 모두 그대로 전달	
-		
+
 	// 2) 추가 객체도 이동생성자로 큐에 넣기
 	q.emplace(std::move(bound));
 }
@@ -31,41 +31,41 @@ void push_job(F&& f, Args&&... args)	// 임시객체 까지 고려하여  rvalue 참조로 받
 void FreeFunc(int v) { std::cout << "FreeFunc: " << v << "\n"; }
 
 
-class Test
+class TestClass
 {
 public:
 	int value = 0;
-	Test(int v)
+	TestClass(int v)
 	{
 		value = v;
 		std::cout << "Test Constructor\n";
 	}
 };
 
-struct Worker {
+struct TestStruct {
 	void Do(int x, const std::string& s) { std::cout << "Do: " << x << ", " << s << "\n"; }
 	int Calc(int a, int b) { std::cout << "Calc: " << (a + b) << "\n"; return a + b; }
 	static void S() { std::cout << "Static\n"; }
-	void PrintClass(const Test& t) {
+	void PrintClass(const TestClass& t) {
 		std::cout << "PrintClass: " << t.value << "\n";
 	}
 };
 
 
 int main() {
-	Worker w;
-	Test t(10);
+	TestStruct w;
+	TestClass t(10);
 
 	// 전역 함수
 	push_job(&FreeFunc, 7);                 // FreeFunc(7)
 
 	// 정적 멤버 함수
-	push_job(&Worker::S);                   // Worker::S()
+	push_job(&TestStruct::S);                   // Worker::S()
 
 	// 인스턴스 멤버 함수
-	push_job(&Worker::Do, &w, 42, "ok");    // w.Do(42,"ok")
+	push_job(&TestStruct::Do, &w, 42, "ok");    // w.Do(42,"ok")
 
-	push_job(&Worker::PrintClass, &w, Test(20));    // w.Do(42,"ok")
+	push_job(&TestStruct::PrintClass, &w, TestClass(20));    // w.Do(42,"ok")
 
 	// 실행 루프 (단일 스레드 가정)
 	while (!q.empty()) {
