@@ -6,6 +6,8 @@
 
 using namespace std;
 
+// 단일 스레드용 TaskGraph 구현 (Kahn 위상정렬 방식)
+// TaskNode들은 반복 실행이 가능하게 수정하지 않고 처리함.
 struct TaskNode {
 	function<void()> run;     // 실행할 함수 객체
 	vector<int> next;         // 후속 노드들 (간선 u->v)
@@ -14,39 +16,47 @@ struct TaskNode {
 
 struct TaskGraph {
 	vector<TaskNode> nodes;
+	queue<int> ready_queue;		// BFS 탐색용 큐-진입차수가 0인 노드들 저장한다.
+	vector<int> current_indeg;	// 실행 중 변하는 진입차수 복사본	
 
 	// 새 노드 추가: 함수 객체를 등록하고 id 반환
-	int AddTask(function<void()> fn) {
+	int AddTask(function<void()> fn) 
+	{	// 함수 객체 이동생성자로 저장
 		nodes.push_back(TaskNode{ std::move(fn), {}, 0 });
 		return (int)nodes.size() - 1;
 	}
 
-	// 의존성 추가: u -> v  (v가 u 이후 실행)
-	void AddDependency(int u, int v) {
-		nodes[u].next.push_back(v);
-		nodes[v].indeg += 1;
+	// 의존성 추가: u -> v  (u 이후 v실행)
+	void AddDependency(int u, int v) 
+	{
+		nodes[u].next.push_back(v);	// id 추가
+		nodes[v].indeg += 1;		// v의 진입차수 증가
 	}
 
 	// Kahn 방식 위상 실행 (단일 스레드 버전)
-	bool Run() {
-		queue<int> ready;
+	void Run() 
+	{
+		// 현재 진입차수 복사
+		current_indeg.resize(nodes.size());		
 		for (int i = 0; i < (int)nodes.size(); ++i)
-			if (nodes[i].indeg == 0) ready.push(i);
+			current_indeg[i] = nodes[i].indeg;
+		
+		//1) 진입차수 0인 노드들 id 큐에 삽입
+		for (int i = 0; i < (int)nodes.size(); ++i)
+			if (nodes[i].indeg == 0) ready_queue.push(i);
 
-		int visited = 0;
-		while (!ready.empty()) {
-			int u = ready.front(); ready.pop();
-			// 1) 실행
-			if (nodes[u].run) nodes[u].run();
-			++visited;
+		while (!ready_queue.empty()) 
+		{
+			int u = ready_queue.front(); ready_queue.pop();
+			// 2) id로 노드 실행
+			if (nodes[u].run) 
+				nodes[u].run();		
 
-			// 2) 후속 indegree 감소 → 0이면 ready
+			// 3) 후속노드 indegree 감소 → 0이면 ready
 			for (int v : nodes[u].next) {
-				if (--nodes[v].indeg == 0) ready.push(v);
+				if (--current_indeg[v] == 0) ready_queue.push(v);
 			}
 		}
-		// 모든 노드를 실행했는지(사이클 없는지) 검사
-		return visited == (int)nodes.size();
 	}
 };
 
@@ -58,26 +68,36 @@ int main()
 
 	int t1 = g.AddTask([] {
 		Sleep(10);
-		cout << "Task1\n"; 
+		cout << "Task1 End\n"; 
 		});
 	int t2 = g.AddTask([] {
 		Sleep(1000);
-		cout << "Task2\n";
+		cout << "Task2 End\n";
 		});
 	int t3 = g.AddTask([] {
 		Sleep(1000);
-		cout << "Task3\n";
+		cout << "Task3 End\n";
 		});
-	int t4 = g.AddTask([] { cout << "Task4 (after 2 & 3)\n"; });
+	int t4 = g.AddTask([] {		
+		Sleep(1000);
+		cout << "Task4 End\n";
+		});
+
+	int t5= g.AddTask([] { cout << "Task5 (after 2 & 3 & 4)\n"; });
 	/*
-		t1 ---> t2 ---> t4
+		t1 ---> t2 ---> t5
 		    +-> t3 -+
+			+-> t4 -+
 	*/
 	g.AddDependency(t1, t2); // t2 depends on t1
 	g.AddDependency(t1, t3); // t3 depends on t1
-	g.AddDependency(t2, t4); // t4 depends on t2
-	g.AddDependency(t3, t4); // t4 depends on t3
+	g.AddDependency(t1, t4); // t3 depends on t1
+	g.AddDependency(t2, t5); // t4 depends on t2
+	g.AddDependency(t3, t5); // t4 depends on t3
+	g.AddDependency(t4, t5); // t4 depends on t2
 
-	bool ok = g.Run();
-	if (!ok) cerr << "Cycle detected! (의존성 그래프에 사이클이 있습니다)\n";
+
+	// 그래프 자체를 수정하지 않으므로 다시 실행해도 동일하게 동작함
+	g.Run();
+	g.Run(); 
 }
