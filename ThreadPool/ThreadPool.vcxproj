@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -124,10 +124,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="TestFuture1.cpp" />
+    <ClCompile Include="TestFuture2.cpp" />
+    <ClCompile Include="ThreadPoolStd.cpp" />
+    <ClCompile Include="ThreadPoolWin.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp17</LanguageStandard>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="ThreadPoolStd.h" />
+    <ClInclude Include="ThreadPoolWin.h" />
+    <ClInclude Include="WinMiniFuture17.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
