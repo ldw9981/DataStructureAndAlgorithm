@@ -21,5 +21,5 @@ int main()
 {
 	std::string str = "hello";
 
-	//f1(std::string("hi"));  // ¿¡·¯!
+	//f1(std::string("hi"));  // ï¿½ï¿½ï¿½ï¿½!
 }

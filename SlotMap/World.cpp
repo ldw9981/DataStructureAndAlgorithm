@@ -1,5 +1,6 @@
 #include "World.h"
 #include "GameObject.h"
+#include "Component.h"
 #include <iostream>
 
 World::World()
@@ -9,8 +10,18 @@ World::World()
 
 World::~World()
 {
-	std::cout << "World destroyed - cleaning up GameObjects" << std::endl;
-	
+	std::cout << "World destroyed - cleaning up GameObjects and Components" << std::endl;
+
+	// 모든 Component 정리
+	for (Component* comp : componentMap.data())
+	{
+		if (comp)
+		{
+			comp->OnDestroy();
+			delete comp;
+		}
+	}
+
 	// 모든 GameObject 정리
 	for (GameObject* obj : objectMap.data())
 	{
@@ -29,6 +40,9 @@ bool World::RemoveGameObject(GameObjectHandle handle)
 	GameObject** obj = objectMap.get(handle);
 	if (obj && *obj)
 	{
+		// GameObject가 가진 모든 Component 제거
+		(*obj)->RemoveAllComponents(*this);
+
 		delete *obj;
 		return objectMap.erase(handle);
 	}
@@ -41,10 +55,28 @@ GameObject* World::GetGameObject(GameObjectHandle handle)
 	return obj ? *obj : nullptr;
 }
 
-const GameObject* World::GetGameObject(GameObjectHandle handle) const
+Component* World::GetComponent(ComponentHandle handle)
 {
-	GameObject* const* obj = objectMap.get(handle);
-	return obj ? *obj : nullptr;
+	Component** comp = componentMap.get(handle);
+	return comp ? *comp : nullptr;
+}
+
+const Component* World::GetComponent(ComponentHandle handle) const
+{
+	Component* const* comp = componentMap.get(handle);
+	return comp ? *comp : nullptr;
+}
+
+bool World::RemoveComponent(ComponentHandle handle)
+{
+	Component** comp = componentMap.get(handle);
+	if (comp && *comp)
+	{
+		(*comp)->OnDestroy();
+		delete *comp;
+		return componentMap.erase(handle);
+	}
+	return false;
 }
 
 void World::UpdateAll()

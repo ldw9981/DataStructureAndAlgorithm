@@ -65,6 +65,7 @@ public:
 			slots[movedSlot].denseIndex = denseIndex;
 		}
 
+		//원소 개수(size)만 1 줄어들고, 보통은 할당된 메모리(capacity)는 그대로다.
 		dense.pop_back();
 		denseToSlot.pop_back();
 
