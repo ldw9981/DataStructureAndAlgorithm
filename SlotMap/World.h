@@ -37,6 +37,10 @@ public:
 	// 모든 GameObject 업데이트
 	void UpdateAll();
 
+	// 핸들 유효성 확인
+	bool IsValid(GameObjectHandle handle) const { return objectMap.isValid(handle); }
+	bool IsValid(ComponentHandle handle) const { return componentMap.isValid(handle); }
+
 	// 현재 GameObject/Component 개수
 	size_t GetObjectCount() const { return objectMap.size(); }
 	size_t GetComponentCount() const { return componentMap.size(); }
