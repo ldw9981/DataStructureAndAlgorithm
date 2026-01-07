@@ -7,15 +7,15 @@ template <typename T>
 class SlotMap {
 public:
 	struct Handle {
-		uint32_t index;
-		uint32_t generation;
+		uint32_t slotIndex;        // slots 배열에서의 인덱스(슬롯 번호)
+		uint32_t generation;   // 그 슬롯의 세대(버전)
 	};
 
 private:
 	struct Slot {
-		uint32_t generation = 0;
-		uint32_t denseIndex = 0;
-		bool alive = false;
+		uint32_t generation = 0; // 세대: stale handle(옛 핸들) 무효화용
+		uint32_t denseIndex = 0; // 현재 이 객체가 dense의 몇 번째에 있는지
+		bool alive = false;      // 현재 살아있는지(삭제 여부)
 	};
 
 	std::vector<T> dense;                 // 연속 데이터
@@ -52,7 +52,7 @@ public:
 	bool erase(Handle h) {
 		if (!isValid(h)) return false;
 
-		Slot& slot = slots[h.index];
+		Slot& slot = slots[h.slotIndex];
 		uint32_t denseIndex = slot.denseIndex;
 		uint32_t lastDense = static_cast<uint32_t>(dense.size() - 1);
 
@@ -71,7 +71,7 @@ public:
 
 		slot.alive = false;
 		slot.generation++;          // ⭐ 핵심: 세대 증가
-		freeSlots.push_back(h.index);
+		freeSlots.push_back(h.slotIndex);
 
 		return true;
 	}
@@ -79,17 +79,17 @@ public:
 	// 접근
 	T* get(Handle h) {
 		if (!isValid(h)) return nullptr;
-		return &dense[slots[h.index].denseIndex];
+		return &dense[slots[h.slotIndex].denseIndex];
 	}
 
 	const T* get(Handle h) const {
 		if (!isValid(h)) return nullptr;
-		return &dense[slots[h.index].denseIndex];
+		return &dense[slots[h.slotIndex].denseIndex];
 	}
 
 	bool isValid(Handle h) const {
-		if (h.index >= slots.size()) return false;
-		const Slot& slot = slots[h.index];
+		if (h.slotIndex >= slots.size()) return false;
+		const Slot& slot = slots[h.slotIndex];
 		return slot.alive && slot.generation == h.generation;
 	}
 

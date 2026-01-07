@@ -25,7 +25,7 @@ void GameObject::UnregisterComponent(ComponentHandle handle)
 {
 	auto it = std::find_if(componentHandles.begin(), componentHandles.end(),
 		[&handle](const ComponentHandle& h) {
-			return h.index == handle.index && h.generation == handle.generation;
+			return h.slotIndex == handle.slotIndex && h.generation == handle.generation;
 		});
 
 	if (it != componentHandles.end())
